@@ -17,18 +17,23 @@ def load_data(path="data/train.csv"):
     return raw_data
 
 
-def treat_data(raw_data):
+def treat_data(raw_data, training=True):
     """
     convert strings to floats and names to the length of the whole name (e.g. "Sage, Miss. Stella Anna" -> 3 -> normalized: 3/7)
     :param raw_data:
+    :param training:
     :return:
     """
     treated_data = []
-    labels = []
+    if training:
+        labels = []
     for row in raw_data:
         treated_data.append([parse_pclass(row["Pclass"]), count_names(row["Name"]), parse_sex(row["Sex"]), parse_age(row["Age"]), parse_sibsp(row["SibSp"]), parse_parch(row["Parch"]), parse_fare(row["Fare"]), parse_cabin(row["Cabin"]), parse_embarked(row["Embarked"])])
-        labels.append(parse_survived(row["Survived"]))
-    return np.reshape(treated_data, (891, 9, 1)), np.reshape(labels, (891, 1))
+        if training:
+            labels.append(parse_survived(row["Survived"]))
+    if training:
+        return np.reshape(treated_data, (len(raw_data), 9, 1)), np.reshape(labels, (len(raw_data), 1))
+    return np.reshape(treated_data, (len(raw_data), 9, 1)), []
 
 
 def parse_sibsp(sibsp_string):

@@ -8,7 +8,7 @@ class TitanicModel:
     def __init__(self):
         self.model = None
 
-    def build_model(self, input_size=(9, 1), k_reg=keras.regularizers.l2(1e-4), a_reg=keras.regularizers.l1(1e-4)):
+    def build_model(self, input_size=(9, 1), k_reg=keras.regularizers.l2(1e-8), a_reg=keras.regularizers.l1(1e-8)):
         """
         Building a functional keras neural net.
         :param input_size: tuple of input size or input shape respectively
@@ -18,17 +18,26 @@ class TitanicModel:
         """
         data_input = keras.Input(shape=input_size)
         normed_data = keras.layers.BatchNormalization()(data_input)
-        conv1 = keras.layers.Conv1D(7, 1, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(normed_data)
-        dense1 = keras.layers.Dense(7, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(normed_data)
-        flat_dense1 = keras.layers.Flatten()(dense1)
-        flat_conv1 = keras.layers.Flatten()(conv1)
-        concat1 = keras.layers.concatenate([flat_conv1, flat_dense1])
-        dense2 = keras.layers.Dense(7, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(concat1)
-        out = keras.layers.Dense(1, activation="sigmoid")(dense2)
+        flat_normed_data = keras.layers.Flatten()(normed_data)
+
+        dense0 = keras.layers.Dense(6, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(flat_normed_data)
+        dense1 = keras.layers.Dense(4, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense0)
+        dense2 = keras.layers.Dense(6, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense1)
+
+        dense3 = keras.layers.Dense(3, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense2)
+        dense4 = keras.layers.Dense(5, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense3)
+        dense5 = keras.layers.Dense(3, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense4)
+
+        dense6 = keras.layers.Dense(5, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense5)
+        dense7 = keras.layers.Dense(2, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense6)
+        dense8 = keras.layers.Dense(4, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense7)
+
+        out = keras.layers.Dense(1, activation="sigmoid")(dense8)
+
         self.model = keras.Model(inputs=data_input, outputs=out)
         self.model.summary()
 
-    def compiler(self, titanic_optimizer=keras.optimizers.Adam(lr=1e-4), titanic_loss=keras.losses.binary_crossentropy):
+    def compiler(self, titanic_optimizer=keras.optimizers.Adam(lr=1e-5), titanic_loss=keras.losses.binary_crossentropy):
         """
         Compiles the model including accuracy metric
         :param titanic_optimizer: keras optimizer, default is set to most common optimizer: Adam optimizer
@@ -51,8 +60,9 @@ class TitanicModel:
                                                               mode='auto', baseline=None, restore_best_weights=False)
 
         train_data, train_labels = train_set
-        history = self.model.fit(x=train_data, y=train_labels, epochs=10000, batch_size=100,
+        history = self.model.fit(x=train_data, y=train_labels, epochs=100000, batch_size=45,
                                  callbacks=[my_callback], verbose=2, shuffle=True)
+        self.model.save("titanic_" + str(time.time()) + ".h5")
         return history
 
 
@@ -60,21 +70,19 @@ def plotter(history):
     # Plot training & validation loss values
     plt.figure()
     plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
     plt.title('Model loss')
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.legend(['Train'], loc='upper left')
     plt.savefig("titanic_loss_" + str(time.time()) + ".png")
 
     # Plot training & validation accuracy values
     plt.figure()
     plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
     plt.title('Model acc')
     plt.ylabel('Acc')
     plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.legend(['Train'], loc='upper left')
     plt.savefig("titanic_acc_" + str(time.time()) + ".png")
 
 
