@@ -20,19 +20,7 @@ class TitanicModel:
         normed_data = keras.layers.BatchNormalization()(data_input)
         flat_normed_data = keras.layers.Flatten()(normed_data)
 
-        dense0 = keras.layers.Dense(6, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(flat_normed_data)
-        dense1 = keras.layers.Dense(4, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense0)
-        dense2 = keras.layers.Dense(6, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense1)
-
-        dense3 = keras.layers.Dense(3, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense2)
-        dense4 = keras.layers.Dense(5, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense3)
-        dense5 = keras.layers.Dense(3, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense4)
-
-        dense6 = keras.layers.Dense(5, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense5)
-        dense7 = keras.layers.Dense(2, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense6)
-        dense8 = keras.layers.Dense(4, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(dense7)
-
-        out = keras.layers.Dense(1, activation="sigmoid")(dense8)
+        out = keras.layers.Dense(1, activation="sigmoid")(flat_normed_data)
 
         self.model = keras.Model(inputs=data_input, outputs=out)
         self.model.summary()
