@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 
 
 def load_data(path="data/train.csv"):
@@ -25,9 +26,9 @@ def treat_data(raw_data):
     treated_data = []
     labels = []
     for row in raw_data:
-        treated_data.append([parse_pclass(row["Pclass"]), count_names(row["Name"]), parse_sex(row["Sex"]), parse_age(row["Age"]), parse_fare(row["Fare"]), parse_cabin(row["Cabin"]), parse_embarked(row["Embarked"])])
+        treated_data.append([parse_pclass(row["Pclass"]), count_names(row["Name"]), parse_sex(row["Sex"]), parse_age(row["Age"]), parse_sibsp(row["SibSp"]), parse_parch(row["Parch"]), parse_fare(row["Fare"]), parse_cabin(row["Cabin"]), parse_embarked(row["Embarked"])])
         labels.append(parse_survived(row["Survived"]))
-    return treated_data, labels
+    return np.reshape(treated_data, (891, 9, 1)), np.reshape(labels, (891, 1))
 
 
 def parse_sibsp(sibsp_string):
@@ -105,7 +106,7 @@ def parse_embarked(embarked_string):
 def parse_cabin(cabin_string):
     """
     Converting cabin number and section to float A23=1023, B104=2104, ...
-    :param cabin_string: 
+    :param cabin_string:
     :return: return normed cabin and section such as A23=0.1023, B104=0.2104, ...
     """
     cabins = ["A", "B", "C", "D", "E", "F", "G", "T"]

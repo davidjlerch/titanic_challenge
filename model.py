@@ -8,23 +8,27 @@ class TitanicModel:
     def __init__(self):
         self.model = None
 
-    def build_model(self, input_size=(7,)):
+    def build_model(self, input_size=(9, 1), k_reg=keras.regularizers.l2(1e-4), a_reg=keras.regularizers.l1(1e-4)):
         """
         Building a functional keras neural net.
         :param input_size: tuple of input size or input shape respectively
+        :param k_reg:
+        :param a_reg:
         :return:
         """
         data_input = keras.Input(shape=input_size)
         normed_data = keras.layers.BatchNormalization()(data_input)
-        conv1 = keras.layers.Conv1D(7, 1)(normed_data)
-        dense1 = keras.layers.Dense(7, activation="relu")(normed_data)
+        conv1 = keras.layers.Conv1D(7, 1, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(normed_data)
+        dense1 = keras.layers.Dense(7, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(normed_data)
+        flat_dense1 = keras.layers.Flatten()(dense1)
         flat_conv1 = keras.layers.Flatten()(conv1)
-        concat1 = keras.layers.concatenate([flat_conv1, dense1])
-        out = keras.layers.Dense(1, activation="softmax")(concat1)
+        concat1 = keras.layers.concatenate([flat_conv1, flat_dense1])
+        dense2 = keras.layers.Dense(7, activation="selu", kernel_regularizer=k_reg, activity_regularizer=a_reg)(concat1)
+        out = keras.layers.Dense(1, activation="sigmoid")(dense2)
         self.model = keras.Model(inputs=data_input, outputs=out)
         self.model.summary()
 
-    def compiler(self, titanic_optimizer=keras.optimizers.Adam, titanic_loss=keras.losses.binary_crossentropy):
+    def compiler(self, titanic_optimizer=keras.optimizers.Adam(lr=1e-4), titanic_loss=keras.losses.binary_crossentropy):
         """
         Compiles the model including accuracy metric
         :param titanic_optimizer: keras optimizer, default is set to most common optimizer: Adam optimizer
@@ -35,7 +39,7 @@ class TitanicModel:
             return
         self.model.compile(loss=titanic_loss, optimizer=titanic_optimizer, metrics=["acc"])
 
-    def train(self, train_set=dt.treated_data(dt.load_data("data/train.csv")), test_set=dt.treated_data(dt.load_data("data/test.csv"))):
+    def train(self, train_set=dt.treat_data(dt.load_data("data/train.csv"))):
         """
         Trains the model with early stopping. Train set and test set are converted from strings to floats and normalized
         in order to avoid values greater than 1
@@ -47,9 +51,8 @@ class TitanicModel:
                                                               mode='auto', baseline=None, restore_best_weights=False)
 
         train_data, train_labels = train_set
-        test_data, test_labels = test_set
-        history = self.model.fit(x=train_data, y=train_labels, validation_data=(test_data, test_labels), epochs=10000,
-                                 callbacks=[my_callback], verbose=2, shuffle=True, batch_size=100)
+        history = self.model.fit(x=train_data, y=train_labels, epochs=10000, batch_size=100,
+                                 callbacks=[my_callback], verbose=2, shuffle=True)
         return history
 
 
@@ -77,7 +80,7 @@ def plotter(history):
 
 if __name__ == "__main__":
     model = TitanicModel()
-    model.build_model((7,))
+    model.build_model((9, 1))
     model.compiler()
     history = model.train()
     plotter(history)
